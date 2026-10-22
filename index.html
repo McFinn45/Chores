@@ -6,6 +6,9 @@
   <title>Household Chore Schedule</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <!-- Firebase App & Realtime Database SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     body {
@@ -85,7 +88,6 @@
       <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2 text-xs font-semibold text-indigo-200">
           <span class="px-2 py-0.5 rounded bg-indigo-500 text-white font-bold uppercase tracking-wider text-[10px]">Admin Unlocked (Cary &amp; Kelly)</span>
-          <span class="hidden sm:inline">Reassign chores, edit colors, change PIN, or reset the week below.</span>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <button onclick="openAddTaskModal()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow transition">
@@ -132,7 +134,7 @@
       </div>
     </section>
 
-    <!-- DAY SELECTOR TABS (Shown in Day View) -->
+    <!-- DAY SELECTOR TABS -->
     <section id="dayTabsSection" class="flex items-center justify-between gap-1.5 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto custom-scrollbar">
       <!-- Populated by JS -->
     </section>
@@ -171,7 +173,7 @@
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
-      <p class="text-xs text-slate-400 mb-4">Enter the Administrator PIN to unlock chore editing, reassignments, PIN settings, and weekly reset controls.</p>
+      <p class="text-xs text-slate-400 mb-4">Enter the Administrator PIN to unlock chore editing, reassignments, and weekly reset controls.</p>
       <input type="password" id="pinInput" inputmode="numeric" maxlength="10" placeholder="Enter PIN" 
         class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-center text-xl font-extrabold tracking-widest text-white focus:outline-none focus:border-indigo-500 mb-2"
         onkeydown="if(event.key==='Enter') verifyPin()" />
@@ -183,7 +185,7 @@
     </div>
   </div>
 
-  <!-- DEDICATED CHANGE PIN MODAL (Cary & Kelly) -->
+  <!-- CHANGE PIN MODAL -->
   <div id="changePinModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
       <div class="flex items-center justify-between mb-4">
@@ -194,8 +196,6 @@
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
-      <p class="text-xs text-slate-400 mb-4">Set a new Admin PIN for Cary &amp; Kelly. This updates immediately across all synced household devices.</p>
-      
       <div class="space-y-3 mb-4">
         <div>
           <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Current Active PIN</label>
@@ -203,7 +203,7 @@
         </div>
         <div>
           <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">New Admin PIN</label>
-          <input type="text" id="newPinModalInput" inputmode="numeric" maxlength="10" placeholder="Enter new PIN (e.g., 4-8 digits)" 
+          <input type="text" id="newPinModalInput" inputmode="numeric" maxlength="10" placeholder="Enter new PIN" 
             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-center text-lg font-extrabold tracking-widest text-white focus:outline-none focus:border-amber-500" />
         </div>
         <div>
@@ -221,7 +221,7 @@
     </div>
   </div>
 
-  <!-- ADD / EDIT TASK MODAL (Admin Only) -->
+  <!-- ADD / EDIT TASK MODAL -->
   <div id="taskModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
@@ -238,9 +238,7 @@
         </div>
         <div>
           <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Assign by Day of Week</label>
-          <div id="taskModalDaysGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <!-- Populated by JS -->
-          </div>
+          <div id="taskModalDaysGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
         </div>
       </div>
       <div class="flex items-center justify-between gap-2 mt-6 pt-4 border-t border-slate-800">
@@ -255,7 +253,7 @@
     </div>
   </div>
 
-  <!-- PEOPLE, COLORS & "EVERYONE" GROUP MODAL (Admin Only) -->
+  <!-- PEOPLE & COLORS MODAL -->
   <div id="colorsModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
@@ -267,20 +265,13 @@
         </button>
       </div>
 
-      <!-- Customize who has to check off "Everyone" Chores -->
       <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 mb-5">
         <label class="block text-xs font-bold uppercase text-teal-400 mb-1">
           <i class="fa-solid fa-users-check mr-1"></i> Who Must Check Off "Everyone" Chores?
         </label>
-        <p class="text-[11px] text-slate-400 mb-2.5">
-          Select each person who gets their own required check-off button on "Everyone" tasks (<em>Clean bedroom</em> &amp; <em>Help as Asked</em>):
-        </p>
-        <div id="everyoneMembersCheckboxes" class="flex flex-wrap gap-2">
-          <!-- Populated by JS -->
-        </div>
+        <div id="everyoneMembersCheckboxes" class="flex flex-wrap gap-2 mt-2"></div>
       </div>
 
-      <!-- Add New Person -->
       <div class="mb-4">
         <label class="block text-xs font-bold uppercase text-slate-400 mb-1.5">Add Person / Assignment Label</label>
         <div class="flex gap-2">
@@ -290,10 +281,7 @@
         </div>
       </div>
 
-      <!-- Existing People Color List -->
-      <div class="space-y-2" id="peopleColorList">
-        <!-- Populated by JS -->
-      </div>
+      <div class="space-y-2" id="peopleColorList"></div>
 
       <div class="mt-6 pt-4 border-t border-slate-800 text-right">
         <button onclick="closeColorsModal()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">Done</button>
@@ -301,30 +289,20 @@
     </div>
   </div>
 
-  <!-- LIVE CLOUD SYNC MODAL -->
+  <!-- REAL-TIME SDK SYNC SETUP MODAL -->
   <div id="cloudModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-cloud-bolt text-sky-400"></i> Live Household Cloud Sync
+          <i class="fa-solid fa-cloud-bolt text-sky-400"></i> Real-Time Firebase SDK Sync
         </h3>
         <button onclick="closeCloudModal()" class="text-slate-400 hover:text-white">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
       <p class="text-xs text-slate-300 leading-relaxed mb-4">
-        To let everyone in the house check off their own name on their phones and see updates live in real-time, paste a free <strong>Firebase Realtime Database URL</strong> below.
+        Enter your <strong>Firebase Database URL</strong> below to connect real-time WebSockets instantly across all family devices.
       </p>
-
-      <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 mb-4 space-y-2 text-xs text-slate-400">
-        <div class="font-bold text-slate-200">Quick 2-Minute Free Setup:</div>
-        <ol class="list-decimal list-inside space-y-1">
-          <li>Go to <a href="https://console.firebase.google.com" target="_blank" class="text-sky-400 underline">console.firebase.google.com</a> and click <strong>Create a project</strong>.</li>
-          <li>In the left menu, click <strong>Build &rarr; Realtime Database &rarr; Create Database</strong>.</li>
-          <li>Choose <strong>Start in Test Mode</strong> and copy your database URL (looks like <code class="text-emerald-400">https://your-project-default-rtdb.firebaseio.com</code>).</li>
-          <li>Paste that URL below and click <strong>Connect Live Sync</strong>!</li>
-        </ol>
-      </div>
 
       <div class="space-y-3">
         <div>
@@ -342,7 +320,7 @@
         <div class="flex gap-2">
           <button onclick="closeCloudModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold">Close</button>
           <button onclick="connectCloudSync()" class="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow-lg shadow-sky-600/30">
-            <i class="fa-solid fa-plug mr-1"></i> Connect Live Sync
+            <i class="fa-solid fa-plug mr-1"></i> Connect Real-Time
           </button>
         </div>
       </div>
@@ -350,9 +328,6 @@
   </div>
 
   <script>
-    // =========================================================================
-    // 1. DEFAULT SPREADSHEET DATA (Exact match to 'Chore schedule1.xlsx')
-    // =========================================================================
     const DAYS = [
       { key: 'MON', label: 'Mon', full: 'Monday' },
       { key: 'TUE', label: 'Tue', full: 'Tuesday' },
@@ -364,20 +339,11 @@
     ];
 
     const DEFAULT_COLORS = {
-      "Colt": "#3b82f6",             // Bright Blue
-      "Madi": "#ec4899",             // Hot Pink
-      "Kam": "#10b981",              // Emerald Green
-      "Zach": "#f97316",             // Orange
-      "Tanner": "#06b6d4",           // Cyan / Teal
-      "Kelly": "#a855f7",            // Purple
-      "Cary": "#6366f1",             // Indigo
-      "Cary/Kelly": "#8b5cf6",       // Violet
-      "Finnigan": "#eab308",         // Amber Gold
-      "Everyone": "#14b8a6",         // Teal
-      "Whoever is asked": "#64748b"  // Slate
+      "Colt": "#3b82f6", "Madi": "#ec4899", "Kam": "#10b981", "Zach": "#f97316",
+      "Tanner": "#06b6d4", "Kelly": "#a855f7", "Cary": "#6366f1", "Cary/Kelly": "#8b5cf6",
+      "Finnigan": "#eab308", "Everyone": "#14b8a6", "Whoever is asked": "#64748b"
     };
 
-    // By default, "Everyone" requires each kid on the schedule to check off their own name
     const DEFAULT_EVERYONE_MEMBERS = ["Madi", "Colt", "Kam", "Zach", "Tanner"];
 
     const INITIAL_CHORES = [
@@ -406,28 +372,25 @@
       { id: "c23", task: "Water plants", days: { MON: "Cary", TUE: "Cary", WED: "Cary", THU: "Cary", FRI: "Cary", SAT: "Cary", SUN: "Cary" } }
     ];
 
-    // =========================================================================
-    // 2. APPLICATION STATE
-    // =========================================================================
-    const STORAGE_KEY = 'finney_household_chores_v2';
-    const CLOUD_URL_KEY = 'finney_firebase_url_v1';
+    const STORAGE_KEY = 'finney_household_chores_v3';
+    const CLOUD_URL_KEY = 'finney_firebase_url_sdk_v1';
 
     let appState = {
       adminPin: "1234",
       colors: { ...DEFAULT_COLORS },
       everyoneMembers: [...DEFAULT_EVERYONE_MEMBERS],
       chores: JSON.parse(JSON.stringify(INITIAL_CHORES)),
-      completed: {}, // Format: { "c1_MON_Madi": true } or { "c18_MON_Colt": true }
-      lastUpdated: Date.now()
+      completed: {}
     };
 
     let isAdmin = false;
     let selectedPerson = "ALL";
     let selectedDay = getTodayDayKey();
-    let viewMode = "day"; // 'day' | 'grid'
+    let viewMode = "day";
     let editingTaskId = null;
     let firebaseUrl = localStorage.getItem(CLOUD_URL_KEY) || "";
-    let syncInterval = null;
+    let dbRef = null;
+    let isRemoteUpdate = false;
 
     function getTodayDayKey() {
       const jsDay = new Date().getDay();
@@ -435,41 +398,23 @@
       return map[jsDay] || 'MON';
     }
 
-    // =========================================================================
-    // 3. INDIVIDUAL CHECK-OFF RESOLUTION HELPERS
-    // =========================================================================
-    // Returns the array of individual names who must check off a given assignment slot
     function getSubAssignees(who) {
       if (!who) return [];
-      if (who === "Everyone") {
-        return (appState.everyoneMembers && appState.everyoneMembers.length > 0)
-          ? appState.everyoneMembers
-          : DEFAULT_EVERYONE_MEMBERS;
-      }
-      if (who.includes('/')) {
-        return who.split('/').map(s => s.trim()).filter(Boolean);
-      }
+      if (who === "Everyone") return appState.everyoneMembers || DEFAULT_EVERYONE_MEMBERS;
+      if (who.includes('/')) return who.split('/').map(s => s.trim()).filter(Boolean);
       return [who];
     }
 
     function isSubAssigneeDone(choreId, dayKey, personName) {
-      // Support both new per-person key and legacy single key
-      const perPersonKey = `${choreId}_${dayKey}_${personName}`;
-      return !!appState.completed[perPersonKey];
+      return !!appState.completed[`${choreId}_${dayKey}_${personName}`];
     }
 
     function getSlotCompletionStatus(choreId, dayKey, who) {
       const subs = getSubAssignees(who);
       if (subs.length === 0) return { doneCount: 0, totalCount: 0, allDone: false };
       let doneCount = 0;
-      subs.forEach(p => {
-        if (isSubAssigneeDone(choreId, dayKey, p)) doneCount++;
-      });
-      return {
-        doneCount,
-        totalCount: subs.length,
-        allDone: doneCount === subs.length
-      };
+      subs.forEach(p => { if (isSubAssigneeDone(choreId, dayKey, p)) doneCount++; });
+      return { doneCount, totalCount: subs.length, allDone: doneCount === subs.length };
     }
 
     function toggleSubAssigneeDone(choreId, dayKey, personName) {
@@ -479,34 +424,22 @@
       } else {
         appState.completed[key] = true;
       }
-      saveState(true);
+      saveState();
     }
 
     function matchesFilter(who, filterPerson) {
       if (!who) return false;
       if (filterPerson === "ALL") return true;
       if (who === filterPerson) return true;
-      const subs = getSubAssignees(who);
-      return subs.includes(filterPerson);
+      return getSubAssignees(who).includes(filterPerson);
     }
 
-    // =========================================================================
-    // 4. INITIALIZATION & STORAGE / LIVE SYNC
-    // =========================================================================
     function initApp() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
-          const parsed = JSON.parse(saved);
-          appState = {
-            ...appState,
-            ...parsed,
-            everyoneMembers: parsed.everyoneMembers || [...DEFAULT_EVERYONE_MEMBERS],
-            completed: parsed.completed || {}
-          };
-        } catch (e) {
-          console.error("Failed to parse saved state", e);
-        }
+          appState = { ...appState, ...JSON.parse(saved) };
+        } catch(e) {}
       }
 
       const now = new Date();
@@ -520,68 +453,55 @@
       }
 
       if (firebaseUrl) {
-        startCloudPolling();
+        setupFirebaseRealtime();
       }
 
       renderAll();
     }
 
-    function saveState(pushToCloud = true) {
-      appState.lastUpdated = Date.now();
+    function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
       renderAll();
-      if (pushToCloud && firebaseUrl) {
-        pushStateToCloud();
+      if (dbRef && !isRemoteUpdate) {
+        dbRef.set(appState).catch(err => console.warn("Firebase set error:", err));
       }
     }
 
-    async function pushStateToCloud() {
+    function setupFirebaseRealtime() {
       if (!firebaseUrl) return;
       try {
-        const endpoint = `${firebaseUrl.replace(/\/$/, "")}/householdChoresV2.json`;
-        await fetch(endpoint, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(appState)
-        });
-        updateSyncBadge(true);
-      } catch (err) {
-        console.warn("Cloud push error:", err);
-        updateSyncBadge(false, true);
-      }
-    }
-
-    async function pullStateFromCloud() {
-      if (!firebaseUrl) return;
-      try {
-        const endpoint = `${firebaseUrl.replace(/\/$/, "")}/householdChoresV2.json`;
-        const res = await fetch(endpoint);
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const remoteData = await res.json();
-
-        if (!remoteData) {
-          await pushStateToCloud();
-        } else if (remoteData.lastUpdated && remoteData.lastUpdated > appState.lastUpdated) {
-          appState = {
-            ...appState,
-            ...remoteData,
-            everyoneMembers: remoteData.everyoneMembers || [...DEFAULT_EVERYONE_MEMBERS],
-            completed: remoteData.completed || {}
-          };
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-          renderAll();
+        const dbConfig = { databaseURL: firebaseUrl };
+        if (!firebase.apps.length) {
+          firebase.initializeApp(dbConfig);
         }
-        updateSyncBadge(true);
+        dbRef = firebase.database().ref("householdChoresV3");
+        
+        dbRef.on("value", (snapshot) => {
+          const remoteVal = snapshot.val();
+          if (remoteVal) {
+            isRemoteUpdate = true;
+            appState = {
+              ...appState,
+              ...remoteVal,
+              everyoneMembers: remoteVal.everyoneMembers || [...DEFAULT_EVERYONE_MEMBERS],
+              completed: remoteVal.completed || {}
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            renderAll();
+            isRemoteUpdate = false;
+            updateSyncBadge(true);
+          } else {
+            // Push our initial state if remote is empty
+            dbRef.set(appState);
+          }
+        }, (error) => {
+          console.warn("Firebase sync error:", error);
+          updateSyncBadge(false, true);
+        });
       } catch (err) {
-        console.warn("Cloud pull error:", err);
+        console.warn("Firebase init error:", err);
         updateSyncBadge(false, true);
       }
-    }
-
-    function startCloudPolling() {
-      pullStateFromCloud();
-      if (syncInterval) clearInterval(syncInterval);
-      syncInterval = setInterval(pullStateFromCloud, 3500);
     }
 
     function updateSyncBadge(connected, error = false) {
@@ -589,7 +509,7 @@
       const text = document.getElementById('syncText');
       if (connected) {
         badge.className = "cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
-        text.textContent = "Live Cloud Synced";
+        text.textContent = "Live Real-Time Synced";
       } else if (error) {
         badge.className = "cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30";
         text.textContent = "Sync Offline (Tap to Check)";
@@ -599,9 +519,6 @@
       }
     }
 
-    // =========================================================================
-    // 5. COLOR & BADGE HELPERS
-    // =========================================================================
     function getPersonColor(name) {
       if (!name) return "#475569";
       return appState.colors[name] || "#64748b";
@@ -611,15 +528,9 @@
       let c = (hex || "#64748b").replace('#', '');
       if (c.length === 3) c = c.split('').map(x => x + x).join('');
       const num = parseInt(c, 16);
-      const r = (num >> 16) & 255;
-      const g = (num >> 8) & 255;
-      const b = num & 255;
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
     }
 
-    // =========================================================================
-    // 6. RENDERING FUNCTIONS
-    // =========================================================================
     function renderAll() {
       renderAdminUI();
       renderPersonFilters();
@@ -639,15 +550,8 @@
 
     function setViewMode(mode) {
       viewMode = mode;
-      const btnDay = document.getElementById('btnViewDay');
-      const btnGrid = document.getElementById('btnViewGrid');
-      if (mode === 'day') {
-        btnDay.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow transition";
-        btnGrid.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition";
-      } else {
-        btnGrid.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow transition";
-        btnDay.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition";
-      }
+      document.getElementById('btnViewDay').className = mode === 'day' ? "px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow transition" : "px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition";
+      document.getElementById('btnViewGrid').className = mode === 'grid' ? "px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow transition" : "px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition";
       renderAll();
     }
 
@@ -672,29 +576,21 @@
 
     function renderPersonFilters() {
       const container = document.getElementById('personFilterContainer');
-      
-      let totalCheckoffs = 0;
-      let totalDoneCheckoffs = 0;
+      let totalCheckoffs = 0, totalDoneCheckoffs = 0;
       const statsByPerson = {};
 
-      Object.keys(appState.colors).forEach(p => {
-        statsByPerson[p] = { total: 0, done: 0 };
-      });
+      Object.keys(appState.colors).forEach(p => statsByPerson[p] = { total: 0, done: 0 });
 
-      // Count every individual check-off (including each person's share of "Everyone" and "Cary/Kelly")
       appState.chores.forEach(chore => {
         DAYS.forEach(d => {
           const who = chore.days[d.key];
           if (who) {
-            const subs = getSubAssignees(who);
-            subs.forEach(personName => {
+            getSubAssignees(who).forEach(personName => {
               totalCheckoffs++;
-              const isDone = isSubAssigneeDone(chore.id, d.key, personName);
-              if (isDone) totalDoneCheckoffs++;
-
+              if (isSubAssigneeDone(chore.id, d.key, personName)) totalDoneCheckoffs++;
               if (!statsByPerson[personName]) statsByPerson[personName] = { total: 0, done: 0 };
               statsByPerson[personName].total++;
-              if (isDone) statsByPerson[personName].done++;
+              if (isSubAssigneeDone(chore.id, d.key, personName)) statsByPerson[personName].done++;
             });
           }
         });
@@ -706,109 +602,65 @@
 
       let html = `
         <button onclick="selectPerson('ALL')" 
-          class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border ${
-            selectedPerson === 'ALL' 
-              ? 'bg-white text-slate-900 border-white shadow-md' 
-              : 'bg-slate-800/90 text-slate-300 border-slate-700 hover:bg-slate-800'
-          }">
+          class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border ${selectedPerson === 'ALL' ? 'bg-white text-slate-900 border-white shadow-md' : 'bg-slate-800/90 text-slate-300 border-slate-700 hover:bg-slate-800'}">
           <span>All Household</span>
           <span class="px-1.5 py-0.5 rounded-md text-[10px] ${selectedPerson === 'ALL' ? 'bg-slate-900 text-white' : 'bg-slate-700 text-slate-300'}">${totalDoneCheckoffs}/${totalCheckoffs}</span>
         </button>
       `;
 
-      // Show individual people who have check-off responsibilities
-      const peopleOrder = Object.keys(appState.colors).filter(p => statsByPerson[p] && statsByPerson[p].total > 0);
-      peopleOrder.forEach(person => {
+      Object.keys(appState.colors).filter(p => statsByPerson[p] && statsByPerson[p].total > 0).forEach(person => {
         const color = getPersonColor(person);
-        const st = statsByPerson[person] || { total: 0, done: 0 };
+        const st = statsByPerson[person];
         const isSelected = selectedPerson === person;
-
         html += `
           <button onclick="selectPerson('${person.replace(/'/g, "\\'")}')"
-            style="${isSelected ? `background-color: ${color}; border-color: ${color}; color: #fff;` : `background-color: ${hexToRgba(color, 0.12)}; border-color: ${hexToRgba(color, 0.4)}; color: #f8fafc;`}"
+            style="${isSelected ? `background-color: ${color}; border-color:${color}; color: #fff;` : `background-color: ${hexToRgba(color, 0.12)}; border-color:${hexToRgba(color, 0.4)}; color: #f8fafc;`}"
             class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border hover:opacity-95">
             <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${isSelected ? '#fff' : color}"></span>
             <span>${person}</span>
-            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold" style="background-color: ${isSelected ? 'rgba(0,0,0,0.25)' : hexToRgba(color, 0.25)}">
-              ${st.done}/${st.total}
-            </span>
+            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold" style="background-color: ${isSelected ? 'rgba(0,0,0,0.25)' : hexToRgba(color, 0.25)}">${st.done}/${st.total}</span>
           </button>
         `;
       });
-
       container.innerHTML = html;
     }
 
-    function selectPerson(person) {
-      selectedPerson = person;
-      renderAll();
-    }
+    function selectPerson(person) { selectedPerson = person; renderAll(); }
 
     function renderDayTabs() {
       const container = document.getElementById('dayTabsSection');
       const todayKey = getTodayDayKey();
-
       let html = '';
-      DAYS.forEach(d => {
-        let dayTotal = 0;
-        let dayDone = 0;
 
+      DAYS.forEach(d => {
+        let dayTotal = 0, dayDone = 0;
         appState.chores.forEach(chore => {
           const who = chore.days[d.key];
           if (!who || !matchesFilter(who, selectedPerson)) return;
-          const subs = getSubAssignees(who);
-
-          if (selectedPerson === 'ALL') {
-            subs.forEach(p => {
-              dayTotal++;
-              if (isSubAssigneeDone(chore.id, d.key, p)) dayDone++;
-            });
-          } else {
-            const relevantSubs = subs.filter(p => p === selectedPerson);
-            relevantSubs.forEach(p => {
-              dayTotal++;
-              if (isSubAssigneeDone(chore.id, d.key, p)) dayDone++;
-            });
-          }
+          getSubAssignees(who).filter(p => selectedPerson === 'ALL' || p === selectedPerson).forEach(p => {
+            dayTotal++;
+            if (isSubAssigneeDone(chore.id, d.key, p)) dayDone++;
+          });
         });
 
         const isActive = selectedDay === d.key;
-        const isToday = todayKey === d.key;
         const allComplete = dayTotal > 0 && dayDone === dayTotal;
-
         html += `
           <button onclick="selectDay('${d.key}')"
-            class="flex-1 min-w-[85px] py-2.5 px-3 rounded-xl text-center transition relative border ${
-              isActive 
-                ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-600/25' 
-                : 'bg-slate-800/60 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-            }">
-            <div class="flex items-center justify-center gap-1 text-xs font-extrabold uppercase tracking-wider">
-              <span>${d.label}</span>
-              ${isToday ? `<span class="w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white' : 'bg-blue-400'}"></span>` : ''}
-            </div>
-            <div class="text-[11px] font-semibold mt-0.5 ${isActive ? 'text-blue-100' : allComplete ? 'text-emerald-400' : 'text-slate-500'}">
-              ${allComplete ? '<i class="fa-solid fa-circle-check mr-1"></i>' : ''}${dayDone}/${dayTotal}
-            </div>
+            class="flex-1 min-w-[85px] py-2.5 px-3 rounded-xl text-center transition relative border ${isActive ? 'bg-blue-600 border-blue-400 text-white shadow-lg' : 'bg-slate-800/60 border-slate-800 text-slate-400 hover:bg-slate-800'}">
+            <div class="text-xs font-extrabold uppercase">${d.label}</div>
+            <div class="text-[11px] font-semibold mt-0.5 ${isActive ? 'text-blue-100' : allComplete ? 'text-emerald-400' : 'text-slate-500'}">${allComplete ? '<i class="fa-solid fa-circle-check mr-1"></i>' : ''}${dayDone}/${dayTotal}</div>
           </button>
         `;
       });
-
       container.innerHTML = html;
     }
 
-    function selectDay(dayKey) {
-      selectedDay = dayKey;
-      renderAll();
-    }
+    function selectDay(dayKey) { selectedDay = dayKey; renderAll(); }
 
-    // =========================================================================
-    // 7. DAY VIEW RENDERER (With Individual Name Check-Off Buttons)
-    // =========================================================================
     function renderDayView() {
       const container = document.getElementById('dayViewContainer');
       const dayObj = DAYS.find(d => d.key === selectedDay);
-
       const matchingChores = appState.chores.filter(chore => {
         const who = chore.days[selectedDay];
         if (isAdmin && selectedPerson === 'ALL') return true;
@@ -816,58 +668,30 @@
       });
 
       if (matchingChores.length === 0) {
-        container.innerHTML = `
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center">
-            <i class="fa-solid fa-mug-hot text-3xl text-slate-600 mb-2"></i>
-            <p class="text-sm font-bold text-slate-300">No chores assigned for ${selectedPerson === 'ALL' ? 'anyone' : selectedPerson} on ${dayObj.full}!</p>
-          </div>
-        `;
+        container.innerHTML = `<div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center"><p class="text-sm font-bold text-slate-300">No chores for ${selectedPerson === 'ALL' ? 'anyone' : selectedPerson} on ${dayObj.full}!</p></div>`;
         return;
       }
 
-      let html = `
-        <div class="flex items-center justify-between px-1">
-          <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-400">
-            ${dayObj.full}'s Chores ${selectedPerson !== 'ALL' ? `&bull; <span class="text-white">${selectedPerson}</span>` : ''}
-          </h3>
-          <span class="text-xs text-slate-500">Tap your name button to check off</span>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      `;
+      let html = `<div class="flex items-center justify-between px-1"><h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-400">${dayObj.full}'s Chores</h3></div><div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
 
       matchingChores.forEach(chore => {
         const who = chore.days[selectedDay];
         if (!who && !isAdmin) return;
-
         const subs = getSubAssignees(who);
-        const isMultiPerson = subs.length > 1;
         const status = getSlotCompletionStatus(chore.id, selectedDay, who);
-        const primaryColor = selectedPerson !== 'ALL' && subs.includes(selectedPerson)
-          ? getPersonColor(selectedPerson)
-          : getPersonColor(who);
+        const primaryColor = getPersonColor(who);
 
-        // Build individual check-off pills for multi-person chores ("Everyone" or "Cary/Kelly")
         let checkoffsHtml = '';
-        if (isMultiPerson) {
+        if (subs.length > 1) {
           checkoffsHtml = `<div class="mt-3 pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center gap-2">`;
           subs.forEach(personName => {
             const pDone = isSubAssigneeDone(chore.id, selectedDay, personName);
             const pColor = getPersonColor(personName);
-            const isHighlightedPerson = selectedPerson === personName;
-
             checkoffsHtml += `
               <button onclick="toggleSubAssigneeDone('${chore.id}', '${selectedDay}', '${personName.replace(/'/g, "\\'")}')"
-                style="${pDone 
-                  ? `background-color: rgba(16, 185, 129, 0.18); border-color: #10b981; color: #a7f3d0;` 
-                  : `background-color: ${hexToRgba(pColor, isHighlightedPerson ? 0.32 : 0.15)}; border-color: ${pColor}; color: #fff;`}"
-                class="px-3 py-1.5 rounded-xl text-xs font-extrabold border flex items-center gap-2 transition transform active:scale-95 shadow-sm ${
-                  selectedPerson !== 'ALL' && !isHighlightedPerson ? 'opacity-45 hover:opacity-100' : ''
-                }">
-                <span class="w-4 h-4 rounded flex items-center justify-center border ${
-                  pDone ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'bg-slate-950/70 border-slate-400 text-transparent'
-                }">
-                  <i class="fa-solid fa-check text-[10px]"></i>
-                </span>
+                style="${pDone ? 'background-color: rgba(16, 185, 129, 0.18); border-color: #10b981; color: #a7f3d0;' : `background-color: ${hexToRgba(pColor, 0.15)}; border-color:${pColor}; color: #fff;`}"
+                class="px-3 py-1.5 rounded-xl text-xs font-extrabold border flex items-center gap-2 transition active:scale-95 shadow-sm">
+                <span class="w-4 h-4 rounded flex items-center justify-center border ${pDone ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'bg-slate-950/70 border-slate-400 text-transparent'}"><i class="fa-solid fa-check text-[10px]"></i></span>
                 <span class="${pDone ? 'line-through opacity-80' : ''}">${personName}</span>
               </button>
             `;
@@ -875,97 +699,42 @@
           checkoffsHtml += `</div>`;
         }
 
-        // Single person chore check-off handler
         const singlePersonName = subs[0] || '';
         const singleDone = subs.length === 1 ? isSubAssigneeDone(chore.id, selectedDay, singlePersonName) : status.allDone;
 
         html += `
-          <div class="chore-card rounded-2xl p-4 border flex flex-col justify-between ${
-            status.allDone 
-              ? 'bg-slate-900/50 border-emerald-500/30 opacity-80' 
-              : 'bg-slate-900 border-slate-800 hover:border-slate-700 shadow-md'
-          }" style="border-left: 5px solid ${primaryColor};">
-            
+          <div class="chore-card rounded-2xl p-4 border flex flex-col justify-between ${status.allDone ? 'bg-slate-900/50 border-emerald-500/30 opacity-80' : 'bg-slate-900 border-slate-800 shadow-md'}" style="border-left: 5px solid ${primaryColor};">
             <div class="flex items-center justify-between gap-3">
-              <!-- Left side: Main Check Button (for single assignee) or Group Progress Icon + Task Name -->
-              <div onclick="${!isMultiPerson && singlePersonName ? `toggleSubAssigneeDone('${chore.id}', '${selectedDay}', '${singlePersonName.replace(/'/g, "\\'")}')` : ''}" 
-                   class="flex items-center gap-3.5 flex-1 ${!isMultiPerson && singlePersonName ? 'cursor-pointer select-none' : ''}">
-                
-                ${!isMultiPerson ? `
-                  <button class="w-7 h-7 rounded-xl flex items-center justify-center transition border-2 shrink-0 ${
-                    singleDone 
-                      ? 'bg-emerald-500 border-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' 
-                      : 'bg-slate-950 border-slate-600 hover:border-slate-400 text-transparent'
-                  }">
-                    <i class="fa-solid fa-check text-sm font-extrabold"></i>
-                  </button>
+              <div onclick="${subs.length === 1 && singlePersonName ? `toggleSubAssigneeDone('${chore.id}', '${selectedDay}', '${singlePersonName.replace(/'/g, "\\'")}')` : ''}" class="flex items-center gap-3.5 flex-1 ${subs.length === 1 && singlePersonName ? 'cursor-pointer select-none' : ''}">
+                ${subs.length === 1 ? `
+                  <button class="w-7 h-7 rounded-xl flex items-center justify-center transition border-2 shrink-0 ${singleDone ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'bg-slate-950 border-slate-600 text-transparent'}"><i class="fa-solid fa-check text-sm font-extrabold"></i></button>
                 ` : `
-                  <div class="w-7 h-7 rounded-xl flex items-center justify-center border shrink-0 text-xs font-extrabold ${
-                    status.allDone 
-                      ? 'bg-emerald-500 border-emerald-500 text-slate-950' 
-                      : 'bg-slate-950 border-slate-700 text-teal-400'
-                  }">
-                    ${status.allDone ? '<i class="fa-solid fa-check"></i>' : `${status.doneCount}/${status.totalCount}`}
-                  </div>
+                  <div class="w-7 h-7 rounded-xl flex items-center justify-center border shrink-0 text-xs font-extrabold ${status.allDone ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'bg-slate-950 border-slate-700 text-teal-400'}">${status.allDone ? '<i class="fa-solid fa-check"></i>' : `${status.doneCount}/${status.totalCount}`}</div>
                 `}
-
                 <div>
-                  <div class="text-sm sm:text-base font-bold transition ${status.allDone ? 'line-through text-slate-500' : 'text-white'}">
-                    ${chore.task}
-                  </div>
-                  <div class="text-[11px] font-medium ${status.allDone ? 'text-emerald-400' : 'text-slate-400'}">
-                    ${isMultiPerson 
-                      ? (status.allDone ? 'Everyone checked off!' : `Tap each person's name below as completed (${status.doneCount}/${status.totalCount} done)`)
-                      : (singleDone ? `<i class="fa-solid fa-check-double mr-1"></i>Checked off by ${singlePersonName}` : `Tap to check off for ${singlePersonName || 'Unassigned'}`)}
-                  </div>
+                  <div class="text-sm sm:text-base font-bold ${status.allDone ? 'line-through text-slate-500' : 'text-white'}">${chore.task}</div>
+                  <div class="text-[11px] font-medium ${status.allDone ? 'text-emerald-400' : 'text-slate-400'}">${subs.length > 1 ? (status.allDone ? 'Everyone completed!' : `Tap each person (${status.doneCount}/${status.totalCount})`) : (singleDone ? `Checked off by ${singlePersonName}` : `Tap to check off for ${singlePersonName}`)}</div>
                 </div>
               </div>
-
-              <!-- Right side: Badge or Admin Reassign Dropdown -->
               <div class="flex items-center gap-2 shrink-0">
-                ${isAdmin ? renderAdminAssigneeSelect(chore.id, selectedDay, who) : `
-                  <span class="px-3 py-1.5 rounded-xl text-xs font-extrabold tracking-wide shadow-sm flex items-center gap-1.5"
-                    style="background-color: ${hexToRgba(getPersonColor(who), 0.18)}; color: #fff; border: 1px solid ${hexToRgba(getPersonColor(who), 0.5)};">
-                    <span class="w-2 h-2 rounded-full" style="background-color: ${getPersonColor(who)}"></span>
-                    ${who || 'Unassigned'}
-                  </span>
-                `}
-                ${isAdmin ? `
-                  <button onclick="openEditTaskModal('${chore.id}')" title="Edit Chore" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-                ` : ''}
+                ${isAdmin ? renderAdminAssigneeSelect(chore.id, selectedDay, who) : `<span class="px-3 py-1.5 rounded-xl text-xs font-extrabold tracking-wide shadow-sm flex items-center gap-1.5" style="background-color: ${hexToRgba(primaryColor, 0.18)}; color: #fff; border: 1px solid ${hexToRgba(primaryColor, 0.5)};"><span class="w-2 h-2 rounded-full" style="background-color: ${primaryColor}"></span>${who || 'Unassigned'}</span>`}
+                ${isAdmin ? `<button onclick="openEditTaskModal('${chore.id}')" class="p-2 rounded-lg bg-slate-800 text-slate-300 text-xs"><i class="fa-solid fa-pen"></i></button>` : ''}
               </div>
             </div>
-
             ${checkoffsHtml}
           </div>
         `;
       });
-
       html += `</div>`;
       container.innerHTML = html;
     }
 
     function renderAdminAssigneeSelect(choreId, dayKey, currentWho) {
-      const people = Object.keys(appState.colors);
       let opts = `<option value="">-- None --</option>`;
-      people.forEach(p => {
-        opts += `<option value="${p}" ${currentWho === p ? 'selected' : ''}>${p}</option>`;
-      });
-      const color = getPersonColor(currentWho);
-      return `
-        <select onchange="adminChangeAssignee('${choreId}', '${dayKey}', this.value)"
-          style="background-color: ${hexToRgba(color, 0.2)}; border-color: ${color};"
-          class="px-2.5 py-1.5 rounded-xl text-xs font-bold text-white border focus:outline-none cursor-pointer">
-          ${opts}
-        </select>
-      `;
+      Object.keys(appState.colors).forEach(p => { opts += `<option value="${p}" ${currentWho === p ? 'selected' : ''}>${p}</option>`; });
+      return `<select onchange="adminChangeAssignee('${choreId}', '${dayKey}', this.value)" class="px-2.5 py-1.5 rounded-xl text-xs font-bold text-white border bg-slate-800 border-slate-700 cursor-pointer">${opts}</select>`;
     }
 
-    // =========================================================================
-    // 8. FULL WEEK MATRIX VIEW RENDERER (With Individual Name Mini-Chips)
-    // =========================================================================
     function renderGridView() {
       const headerRow = document.getElementById('gridHeaderRow');
       const bodyRows = document.getElementById('gridBodyRows');
@@ -973,427 +742,143 @@
 
       let hHtml = `<th class="py-3.5 px-4 sticky left-0 z-20 bg-slate-950 border-r border-slate-800 min-w-[190px]">TASKS</th>`;
       DAYS.forEach(d => {
-        const isToday = d.key === todayKey;
-        hHtml += `
-          <th class="py-3.5 px-2.5 text-center min-w-[140px] border-r border-slate-800/60 ${isToday ? 'bg-blue-950/40 text-blue-300' : ''}">
-            <div>${d.key}</div>
-            <div class="text-[9px] font-semibold text-slate-500 mt-0.5">WHO / DONE</div>
-          </th>
-        `;
+        hHtml += `<th class="py-3.5 px-2.5 text-center min-w-[140px] border-r border-slate-800/60 ${d.key === todayKey ? 'bg-blue-950/40 text-blue-300' : ''}"><div>${d.key}</div></th>`;
       });
       headerRow.innerHTML = hHtml;
 
       let bHtml = '';
       appState.chores.forEach(chore => {
-        const hasMatchInRow = DAYS.some(d => matchesFilter(chore.days[d.key], selectedPerson));
-        if (!hasMatchInRow && selectedPerson !== 'ALL') return;
-
-        bHtml += `<tr class="hover:bg-slate-800/40 transition">`;
-        
-        bHtml += `
-          <td class="py-3 px-4 font-bold text-slate-200 sticky left-0 z-10 bg-slate-900 border-r border-slate-800 text-xs sm:text-sm">
-            <div class="flex items-center justify-between gap-2">
-              <span>${chore.task}</span>
-              ${isAdmin ? `
-                <button onclick="openEditTaskModal('${chore.id}')" class="text-slate-400 hover:text-white text-xs">
-                  <i class="fa-solid fa-pen-to-square"></i>
-                </button>
-              ` : ''}
-            </div>
-          </td>
-        `;
-
+        bHtml += `<tr class="hover:bg-slate-800/40 transition"><td class="py-3 px-4 font-bold text-slate-200 sticky left-0 z-10 bg-slate-950 border-r border-slate-800 text-xs">${chore.task}</td>`;
         DAYS.forEach(d => {
           const who = chore.days[d.key];
-          const isMatch = matchesFilter(who, selectedPerson);
-
           if (!who) {
-            bHtml += `
-              <td class="p-2 text-center border-r border-slate-800/50 bg-slate-950/30">
-                ${isAdmin ? renderAdminAssigneeSelect(chore.id, d.key, null) : `<span class="text-slate-700 text-xs">&mdash;</span>`}
-              </td>
-            `;
+            bHtml += `<td class="p-2 text-center border-r border-slate-800/50">${isAdmin ? renderAdminAssigneeSelect(chore.id, d.key, null) : '&mdash;'}</td>`;
           } else {
             const subs = getSubAssignees(who);
-            const isMulti = subs.length > 1;
             const status = getSlotCompletionStatus(chore.id, d.key, who);
-            const color = getPersonColor(who);
-            const dimClass = (!isMatch && selectedPerson !== 'ALL') ? 'opacity-20 pointer-events-none' : '';
-
             if (isAdmin) {
-              bHtml += `
-                <td class="p-2 border-r border-slate-800/50">
-                  ${renderAdminAssigneeSelect(chore.id, d.key, who)}
-                </td>
-              `;
-            } else if (!isMulti) {
+              bHtml += `<td class="p-2 border-r border-slate-800/50">${renderAdminAssigneeSelect(chore.id, d.key, who)}</td>`;
+            } else if (subs.length === 1) {
               const singleName = subs[0];
               const isDone = isSubAssigneeDone(chore.id, d.key, singleName);
-              bHtml += `
-                <td class="p-2 border-r border-slate-800/50 ${dimClass}">
-                  <div onclick="toggleSubAssigneeDone('${chore.id}', '${d.key}', '${singleName.replace(/'/g, "\\'")}')" 
-                    class="rounded-xl p-2 flex items-center justify-between gap-1.5 cursor-pointer transition border ${
-                      isDone ? 'bg-emerald-950/30 border-emerald-500/40' : 'hover:brightness-110'
-                    }"
-                    style="${!isDone ? `background-color: ${hexToRgba(color, 0.15)}; border-color: ${hexToRgba(color, 0.45)};` : ''}">
-                    <span class="text-xs font-extrabold truncate ${isDone ? 'line-through text-slate-400' : 'text-white'}">
-                      ${singleName}
-                    </span>
-                    <span class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition ${
-                      isDone ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'bg-slate-950/80 border-slate-600 text-transparent'
-                    }">
-                      <i class="fa-solid fa-check text-[10px]"></i>
-                    </span>
-                  </div>
-                </td>
-              `;
+              bHtml += `<td class="p-2 border-r border-slate-800/50"><div onclick="toggleSubAssigneeDone('${chore.id}', '${d.key}', '${singleName.replace(/'/g, "\\'")}')" class="rounded-xl p-2 flex items-center justify-between gap-1.5 cursor-pointer transition border ${isDone ? 'bg-emerald-950/30 border-emerald-500/40' : 'bg-slate-900 border-slate-800'}"><span class="text-xs font-extrabold ${isDone ? 'line-through text-slate-400' : 'text-white'}">${singleName}</span><span class="w-5 h-5 rounded-md flex items-center justify-center border ${isDone ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'border-slate-600'}"><i class="fa-solid fa-check text-[10px]"></i></span></div></td>`;
             } else {
-              // Multi-person cell ("Everyone" or "Cary/Kelly"): render individual clickable mini-badges
               let chips = '';
               subs.forEach(pName => {
                 const pDone = isSubAssigneeDone(chore.id, d.key, pName);
-                const pColor = getPersonColor(pName);
-                chips += `
-                  <button onclick="toggleSubAssigneeDone('${chore.id}', '${d.key}', '${pName.replace(/'/g, "\\'")}')"
-                    style="${pDone 
-                      ? 'background-color: rgba(16,185,129,0.22); border-color: #10b981; color: #a7f3d0;' 
-                      : `background-color: ${hexToRgba(pColor, 0.2)}; border-color: ${pColor}; color: #fff;`}"
-                    class="px-1.5 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1 transition hover:brightness-110 ${
-                      selectedPerson !== 'ALL' && selectedPerson !== pName ? 'opacity-35' : ''
-                    }">
-                    <i class="fa-solid ${pDone ? 'fa-square-check text-emerald-400' : 'fa-square text-slate-600'} text-[9px]"></i>
-                    <span class="${pDone ? 'line-through' : ''}">${pName}</span>
-                  </button>
-                `;
+                chips += `<button onclick="toggleSubAssigneeDone('${chore.id}', '${d.key}', '${pName.replace(/'/g, "\\'")}')" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1 ${pDone ? 'bg-emerald-900/40 border-emerald-500 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-300'}"><span class="${pDone ? 'line-through' : ''}">${pName}</span></button>`;
               });
-
-              bHtml += `
-                <td class="p-1.5 border-r border-slate-800/50 ${dimClass}">
-                  <div class="rounded-xl p-1.5 border ${status.allDone ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-slate-950/60 border-slate-800'}">
-                    <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 flex justify-between">
-                      <span>${who}</span>
-                      <span class="${status.allDone ? 'text-emerald-400' : ''}">${status.doneCount}/${status.totalCount}</span>
-                    </div>
-                    <div class="flex flex-wrap gap-1">
-                      ${chips}
-                    </div>
-                  </div>
-                </td>
-              `;
+              bHtml += `<td class="p-1.5 border-r border-slate-800/50"><div class="rounded-xl p-1.5 border ${status.allDone ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-slate-950/60 border-slate-800'}"><div class="text-[10px] font-extrabold uppercase text-slate-400 mb-1 flex justify-between"><span>${who}</span><span>${status.doneCount}/${status.totalCount}</span></div><div class="flex flex-wrap gap-1">${chips}</div></div></td>`;
             }
           }
         });
-
         bHtml += `</tr>`;
       });
-
       bodyRows.innerHTML = bHtml;
     }
 
-    // =========================================================================
-    // 9. ADMIN UNLOCK & DEDICATED PIN MANAGER (Cary & Kelly)
-    // =========================================================================
     function handleAdminClick() {
-      if (isAdmin) {
-        isAdmin = false;
-        renderAll();
-      } else {
-        document.getElementById('pinInput').value = '';
-        document.getElementById('pinError').textContent = '';
-        document.getElementById('pinModal').classList.remove('hidden');
-        setTimeout(() => document.getElementById('pinInput').focus(), 100);
-      }
+      if (isAdmin) { isAdmin = false; renderAll(); }
+      else { document.getElementById('pinInput').value = ''; document.getElementById('pinModal').classList.remove('hidden'); }
     }
-
-    function closePinModal() {
-      document.getElementById('pinModal').classList.add('hidden');
-    }
-
+    function closePinModal() { document.getElementById('pinModal').classList.add('hidden'); }
     function verifyPin() {
-      const entered = document.getElementById('pinInput').value.trim();
-      if (entered === appState.adminPin) {
-        isAdmin = true;
-        closePinModal();
-        renderAll();
-      } else {
-        document.getElementById('pinError').textContent = 'Incorrect Administrator PIN.';
-      }
+      if (document.getElementById('pinInput').value.trim() === appState.adminPin) { isAdmin = true; closePinModal(); renderAll(); }
+      else { document.getElementById('pinError').textContent = 'Incorrect PIN.'; }
     }
-
-    function openChangePinModal() {
-      if (!isAdmin) return;
-      document.getElementById('currentPinDisplay').textContent = appState.adminPin;
-      document.getElementById('newPinModalInput').value = '';
-      document.getElementById('confirmPinModalInput').value = '';
-      document.getElementById('changePinError').textContent = '';
-      document.getElementById('changePinModal').classList.remove('hidden');
-      setTimeout(() => document.getElementById('newPinModalInput').focus(), 100);
-    }
-
-    function closeChangePinModal() {
-      document.getElementById('changePinModal').classList.add('hidden');
-    }
-
+    function openChangePinModal() { document.getElementById('changePinModal').classList.remove('hidden'); }
+    function closeChangePinModal() { document.getElementById('changePinModal').classList.add('hidden'); }
     function saveUpdatedPinFromModal() {
-      if (!isAdmin) return;
-      const newPin = document.getElementById('newPinModalInput').value.trim();
-      const confirmPin = document.getElementById('confirmPinModalInput').value.trim();
-      const errEl = document.getElementById('changePinError');
-
-      if (!newPin || newPin.length < 4) {
-        errEl.textContent = 'Please enter a PIN of at least 4 characters.';
-        return;
-      }
-      if (newPin !== confirmPin) {
-        errEl.textContent = 'New PIN and confirmation do not match.';
-        return;
-      }
-
-      appState.adminPin = newPin;
-      saveState(true);
-      closeChangePinModal();
-      alert(`Admin PIN successfully updated to "${newPin}"!`);
+      const p1 = document.getElementById('newPinModalInput').value.trim();
+      const p2 = document.getElementById('confirmPinModalInput').value.trim();
+      if (p1.length < 4 || p1 !== p2) { document.getElementById('changePinError').textContent = 'Pins must match and be at least 4 chars.'; return; }
+      appState.adminPin = p1; saveState(); closeChangePinModal(); alert("PIN updated!");
     }
-
     function adminChangeAssignee(choreId, dayKey, newPerson) {
-      if (!isAdmin) return;
       const chore = appState.chores.find(c => c.id === choreId);
-      if (chore) {
-        chore.days[dayKey] = newPerson ? newPerson : null;
-        saveState(true);
-      }
+      if (chore) { chore.days[dayKey] = newPerson || null; saveState(); }
     }
-
     function confirmResetWeek() {
-      if (!isAdmin) return;
-      if (confirm("Reset all checkmarks for a brand new week? (Chore assignments will stay intact)")) {
-        appState.completed = {};
-        saveState(true);
-      }
+      if (confirm("Reset all checkmarks for the new week?")) { appState.completed = {}; saveState(); }
     }
-
-    // =========================================================================
-    // 10. ADD / EDIT CHORE MODAL (Admin Only)
-    // =========================================================================
-    function openAddTaskModal() {
-      if (!isAdmin) return;
-      editingTaskId = null;
-      document.getElementById('taskModalTitle').textContent = 'Add New Chore';
-      document.getElementById('taskNameInput').value = '';
-      document.getElementById('deleteTaskBtn').classList.add('hidden');
-      renderTaskModalDays({});
-      document.getElementById('taskModal').classList.remove('hidden');
-    }
-
-    function openEditTaskModal(choreId) {
-      if (!isAdmin) return;
-      const chore = appState.chores.find(c => c.id === choreId);
-      if (!chore) return;
-      editingTaskId = choreId;
-      document.getElementById('taskModalTitle').textContent = 'Edit Chore & Daily Assignments';
-      document.getElementById('taskNameInput').value = chore.task;
+    function openAddTaskModal() { editingTaskId = null; document.getElementById('taskNameInput').value = ''; renderTaskModalDays({}); document.getElementById('taskModal').classList.remove('hidden'); }
+    function openEditTaskModal(id) {
+      const c = appState.chores.find(x => x.id === id);
+      if (!c) return;
+      editingTaskId = id; document.getElementById('taskNameInput').value = c.task;
       document.getElementById('deleteTaskBtn').classList.remove('hidden');
-      renderTaskModalDays(chore.days);
-      document.getElementById('taskModal').classList.remove('hidden');
+      renderTaskModalDays(c.days); document.getElementById('taskModal').classList.remove('hidden');
     }
-
-    function renderTaskModalDays(daysMap) {
-      const grid = document.getElementById('taskModalDaysGrid');
-      const people = Object.keys(appState.colors);
+    function renderTaskModalDays(map) {
       let html = '';
-
       DAYS.forEach(d => {
-        const current = daysMap[d.key] || '';
-        let opts = `<option value="">-- No One --</option>`;
-        people.forEach(p => {
-          opts += `<option value="${p}" ${current === p ? 'selected' : ''}>${p}</option>`;
-        });
-
-        html += `
-          <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-300">${d.full}</span>
-            <select id="modalDay_${d.key}" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white">
-              ${opts}
-            </select>
-          </div>
-        `;
+        let opts = `<option value="">-- None --</option>`;
+        Object.keys(appState.colors).forEach(p => { opts += `<option value="${p}" ${map[d.key] === p ? 'selected' : ''}>${p}</option>`; });
+        html += `<div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between"><span class="text-xs font-bold text-slate-300">${d.full}</span><select id="modalDay_${d.key}" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">${opts}</select></div>`;
       });
-
-      grid.innerHTML = html;
+      document.getElementById('taskModalDaysGrid').innerHTML = html;
     }
-
     function saveTaskFromModal() {
-      if (!isAdmin) return;
       const name = document.getElementById('taskNameInput').value.trim();
-      if (!name) {
-        alert("Please enter a chore name.");
-        return;
-      }
-
+      if (!name) return;
       const newDays = {};
-      DAYS.forEach(d => {
-        const val = document.getElementById(`modalDay_${d.key}`).value;
-        newDays[d.key] = val ? val : null;
-      });
-
+      DAYS.forEach(d => { newDays[d.key] = document.getElementById(`modalDay_${d.key}`).value || null; });
       if (editingTaskId) {
-        const chore = appState.chores.find(c => c.id === editingTaskId);
-        if (chore) {
-          chore.task = name;
-          chore.days = newDays;
-        }
+        const c = appState.chores.find(x => x.id === editingTaskId);
+        if (c) { c.task = name; c.days = newDays; }
       } else {
-        appState.chores.push({
-          id: 'c_' + Date.now(),
-          task: name,
-          days: newDays
-        });
+        appState.chores.push({ id: 'c_' + Date.now(), task: name, days: newDays });
       }
-
-      closeTaskModal();
-      saveState(true);
+      closeTaskModal(); saveState();
     }
-
     function deleteCurrentTask() {
-      if (!isAdmin || !editingTaskId) return;
-      if (confirm("Delete this chore from the schedule?")) {
-        appState.chores = appState.chores.filter(c => c.id !== editingTaskId);
-        closeTaskModal();
-        saveState(true);
-      }
+      if (confirm("Delete chore?")) { appState.chores = appState.chores.filter(x => x.id !== editingTaskId); closeTaskModal(); saveState(); }
     }
-
-    function closeTaskModal() {
-      document.getElementById('taskModal').classList.add('hidden');
-    }
-
-    // =========================================================================
-    // 11. PEOPLE, COLORS & "EVERYONE" GROUP MODAL (Admin Only)
-    // =========================================================================
+    function closeTaskModal() { document.getElementById('taskModal').classList.add('hidden'); }
     function openColorsModal() {
-      if (!isAdmin) return;
-      renderEveryoneMemberToggles();
-      renderPeopleColorList();
+      let html = '';
+      Object.keys(appState.colors).filter(p => !["Everyone", "Whoever is asked", "Cary/Kelly"].includes(p)).forEach(p => {
+        const inc = appState.everyoneMembers.includes(p);
+        html += `<button onclick="toggleEveryoneMember('${p}')" class="px-3 py-1.5 rounded-xl text-xs font-bold border ${inc ? 'bg-teal-500/20 border-teal-500 text-teal-300' : 'bg-slate-900 border-slate-700 text-slate-400'}">${p}</button>`;
+      });
+      document.getElementById('everyoneMembersCheckboxes').innerHTML = html;
+
+      let listHtml = '';
+      Object.entries(appState.colors).forEach(([p, col]) => {
+        listHtml += `<div class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2"><div class="flex items-center gap-2"><span class="w-3.5 h-3.5 rounded-full" style="background-color: ${col}"></span><span class="text-sm font-bold text-white">${p}</span></div><input type="color" value="${col}" onchange="appState.colors['${p}'] = this.value; saveState(); openColorsModal();" class="w-8 h-8 rounded bg-transparent border-0 cursor-pointer"/></div>`;
+      });
+      document.getElementById('peopleColorList').innerHTML = listHtml;
       document.getElementById('colorsModal').classList.remove('hidden');
     }
-
-    function closeColorsModal() {
-      document.getElementById('colorsModal').classList.add('hidden');
+    function closeColorsModal() { document.getElementById('colorsModal').classList.add('hidden'); }
+    function toggleEveryoneMember(p) {
+      const idx = appState.everyoneMembers.indexOf(p);
+      if (idx >= 0) appState.everyoneMembers.splice(idx, 1);
+      else appState.everyoneMembers.push(p);
+      saveState(); openColorsModal();
     }
-
-    function renderEveryoneMemberToggles() {
-      const container = document.getElementById('everyoneMembersCheckboxes');
-      const candidatePeople = Object.keys(appState.colors).filter(
-        p => !["Everyone", "Whoever is asked", "Cary/Kelly"].includes(p)
-      );
-
-      let html = '';
-      candidatePeople.forEach(person => {
-        const isIncluded = appState.everyoneMembers.includes(person);
-        const color = getPersonColor(person);
-        html += `
-          <button onclick="toggleEveryoneMember('${person.replace(/'/g, "\\'")}')"
-            style="${isIncluded ? `background-color: ${hexToRgba(color, 0.25)}; border-color: ${color}; color: #fff;` : ''}"
-            class="px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 ${
-              isIncluded ? '' : 'bg-slate-900 border-slate-700 text-slate-400'
-            }">
-            <i class="fa-solid ${isIncluded ? 'fa-circle-check text-emerald-400' : 'fa-circle text-slate-600'}"></i>
-            <span>${person}</span>
-          </button>
-        `;
-      });
-      container.innerHTML = html;
-    }
-
-    function toggleEveryoneMember(person) {
-      if (!isAdmin) return;
-      const idx = appState.everyoneMembers.indexOf(person);
-      if (idx >= 0) {
-        if (appState.everyoneMembers.length <= 1) {
-          alert("At least one person must be included in 'Everyone'.");
-          return;
-        }
-        appState.everyoneMembers.splice(idx, 1);
-      } else {
-        appState.everyoneMembers.push(person);
-      }
-      saveState(true);
-      renderEveryoneMemberToggles();
-    }
-
-    function renderPeopleColorList() {
-      const list = document.getElementById('peopleColorList');
-      let html = '';
-      Object.entries(appState.colors).forEach(([person, color]) => {
-        html += `
-          <div class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2">
-            <div class="flex items-center gap-2.5">
-              <span class="w-3.5 h-3.5 rounded-full" style="background-color: ${color}"></span>
-              <span class="text-sm font-bold text-white">${person}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="color" value="${color}" onchange="updatePersonColor('${person.replace(/'/g, "\\'")}', this.value)"
-                class="w-8 h-8 rounded cursor-pointer bg-transparent border-0" />
-            </div>
-          </div>
-        `;
-      });
-      list.innerHTML = html;
-    }
-
-    function updatePersonColor(person, newColor) {
-      if (!isAdmin) return;
-      appState.colors[person] = newColor;
-      saveState(true);
-      renderPeopleColorList();
-      renderEveryoneMemberToggles();
-    }
-
     function addPerson() {
-      if (!isAdmin) return;
       const name = document.getElementById('newPersonName').value.trim();
-      const color = document.getElementById('newPersonColor').value;
+      const col = document.getElementById('newPersonColor').value;
       if (!name) return;
-      appState.colors[name] = color;
+      appState.colors[name] = col;
       document.getElementById('newPersonName').value = '';
-      saveState(true);
-      renderPeopleColorList();
-      renderEveryoneMemberToggles();
+      saveState(); openColorsModal();
     }
-
-    // =========================================================================
-    // 12. LIVE CLOUD SYNC MODAL
-    // =========================================================================
-    function openCloudModal() {
-      document.getElementById('firebaseUrlInput').value = firebaseUrl;
-      document.getElementById('cloudStatusMsg').textContent = '';
-      document.getElementById('cloudModal').classList.remove('hidden');
-    }
-
-    function closeCloudModal() {
-      document.getElementById('cloudModal').classList.add('hidden');
-    }
-
-    async function connectCloudSync() {
-      const rawUrl = document.getElementById('firebaseUrlInput').value.trim();
-      if (!rawUrl) {
-        alert("Please paste your Firebase Realtime Database URL.");
-        return;
-      }
-      firebaseUrl = rawUrl.replace(/\/$/, "");
+    function openCloudModal() { document.getElementById('firebaseUrlInput').value = firebaseUrl; document.getElementById('cloudModal').classList.remove('hidden'); }
+    function closeCloudModal() { document.getElementById('cloudModal').classList.add('hidden'); }
+    function connectCloudSync() {
+      const url = document.getElementById('firebaseUrlInput').value.trim().replace(/\/$/, "");
+      if (!url) return;
+      firebaseUrl = url;
       localStorage.setItem(CLOUD_URL_KEY, firebaseUrl);
-      document.getElementById('cloudStatusMsg').textContent = 'Connecting and syncing household data...';
-      await pullStateFromCloud();
-      startCloudPolling();
-      document.getElementById('cloudStatusMsg').textContent = 'Connected! All devices using this link will now stay in sync.';
-    }
-
-    function disconnectCloud() {
-      firebaseUrl = "";
-      localStorage.removeItem(CLOUD_URL_KEY);
-      if (syncInterval) clearInterval(syncInterval);
-      updateSyncBadge(false);
+      setupFirebaseRealtime();
       closeCloudModal();
+    }
+    function disconnectCloud() {
+      firebaseUrl = ""; localStorage.removeItem(CLOUD_URL_KEY);
+      if (dbRef) dbRef.off();
+      updateSyncBadge(false); closeCloudModal();
     }
 
     window.addEventListener('DOMContentLoaded', initApp);
