@@ -80,7 +80,7 @@
             <span>Live Household Status Dashboard</span>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="requestBrowserNotifications()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-sky-300 border border-slate-600 text-xs font-bold"><i class="fa-solid fa-bell mr-1"></i> Enable Alerts</button>
+            <button id="notifToggleBtn" onclick="toggleNotifications()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-sky-300 border border-slate-600 text-xs font-bold flex items-center gap-1.5"><i class="fa-solid fa-bell text-sky-400"></i> Enable Alerts</button>
             <button onclick="openColorsModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 border border-slate-600 text-xs font-semibold">Colors</button>
             <button onclick="openChangePinModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-bold">PIN</button>
             <button onclick="openCloudModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-sky-400 border border-slate-600 text-xs font-semibold">Cloud Sync</button>
@@ -327,10 +327,40 @@
       }
     }
 
-    function requestBrowserNotifications() {
-      if (window.Notification) {
-        Notification.requestPermission().then(p => {
-          alert(p === "granted" ? "Notifications enabled!" : "Permission denied.");
+    function updateNotificationButton() {
+      const btn = document.getElementById('notifToggleBtn');
+      if (!btn) return;
+      if (!window.Notification) {
+        btn.innerHTML = `<i class="fa-solid fa-bell-slash text-slate-400"></i> Not Supported`;
+        return;
+      }
+      if (Notification.permission === "granted") {
+        btn.className = "px-3 py-1.5 rounded-lg bg-emerald-600 text-white border border-emerald-400 text-xs font-bold flex items-center gap-1.5 shadow";
+        btn.innerHTML = `<i class="fa-solid fa-bell text-white"></i> Alerts: On`;
+      } else if (Notification.permission === "denied") {
+        btn.className = "px-3 py-1.5 rounded-lg bg-rose-900/40 text-rose-300 border border-rose-700 text-xs font-bold flex items-center gap-1.5";
+        btn.innerHTML = `<i class="fa-solid fa-bell-slash text-rose-400"></i> Alerts: Denied`;
+      } else {
+        btn.className = "px-3 py-1.5 rounded-lg bg-slate-800 text-sky-300 border border-slate-600 text-xs font-bold flex items-center gap-1.5";
+        btn.innerHTML = `<i class="fa-solid fa-bell text-sky-400"></i> Enable Alerts`;
+      }
+    }
+
+    function toggleNotifications() {
+      if (!window.Notification) {
+        alert("Browser notifications are not supported on this device.");
+        return;
+      }
+      if (Notification.permission === "granted") {
+        alert("Notifications are already enabled!");
+      } else {
+        Notification.requestPermission().then(permission => {
+          updateNotificationButton();
+          if (permission === "granted") {
+            alert("Notifications enabled successfully!");
+          } else {
+            alert("Notification permission was denied.");
+          }
         });
       }
     }
@@ -353,6 +383,7 @@
       }
 
       document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+      updateNotificationButton();
       if (binId && masterKey) { startPolling(); }
       renderAll();
     }
