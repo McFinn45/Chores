@@ -160,6 +160,14 @@
     </div>
   </div>
 
+  <div id="taskModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+      <h3 id="taskModalTitle" class="text-lg font-bold text-white mb-3">Add Chore</h3>
+      <input type="text" id="taskNameInput" placeholder="Chore Name" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white mb-4"/>
+      <div class="flex justify-end gap-2"><button onclick="closeTaskModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Cancel</button><button onclick="saveTaskFromModal()" class="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl">Save</button></div>
+    </div>
+  </div>
+
   <script>
     const DAYS = [
       { key: 'MON', label: 'Mon', full: 'Monday' }, { key: 'TUE', label: 'Tue', full: 'Tuesday' },
@@ -585,7 +593,7 @@
     }
     function closePinModal() { document.getElementById('pinModal').classList.add('hidden'); }
     function verifyPin() {
-      if (document.getElementById('pinInput'].value.trim() === appState.adminPin) { isAdmin = true; closePinModal(); renderAll(); }
+      if (document.getElementById('pinInput').value.trim() === appState.adminPin) { isAdmin = true; closePinModal(); renderAll(); }
       else { document.getElementById('pinError').textContent = 'Incorrect PIN'; }
     }
     function openChangePinModal() { document.getElementById('changePinModal').classList.remove('hidden'); }
@@ -620,6 +628,8 @@
       document.getElementById('colorsModal').classList.remove('hidden');
     }
     function closeColorsModal() { document.getElementById('colorsModal').classList.add('hidden'); }
+    function closeTaskModal() { document.getElementById('taskModal').classList.add('hidden'); }
+    function saveTaskFromModal() { closeTaskModal(); }
 
     window.addEventListener('DOMContentLoaded', initApp);
   </script>
