@@ -19,9 +19,19 @@
 </head>
 <body class="min-h-screen pb-24">
 
+  <!-- FLOATING MUSIC PLAYER WIDGET -->
+  <div class="fixed bottom-5 right-5 z-40 bg-slate-900/95 backdrop-blur border border-indigo-500/40 p-2.5 rounded-2xl shadow-2xl flex items-center gap-2">
+    <button id="musicToggleBtn" onclick="toggleBackgroundMusic()" class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30">
+      <i id="musicIcon" class="fa-solid fa-music text-indigo-200"></i>
+      <span id="musicBtnText">Music: Off</span>
+    </button>
+  </div>
+
   <!-- HEADER -->
   <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 shadow-lg">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand -->
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20">
           <i class="fa-solid fa-clipboard-check text-white text-lg"></i>
@@ -38,6 +48,7 @@
         </div>
       </div>
 
+      <!-- Right Controls -->
       <div class="flex items-center gap-2">
         <div class="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center text-xs font-semibold">
           <button id="btnViewDay" onclick="setViewMode('day')" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow transition"><i class="fa-solid fa-calendar-day mr-1"></i> Day View</button>
@@ -195,6 +206,66 @@
     let activeDeviceUser = localStorage.getItem('finney_device_user') || "Cary";
     let syncInterval = null;
 
+    let audioCtx = null;
+    let musicInterval = null;
+    let isMusicPlaying = false;
+
+    function toggleBackgroundMusic() {
+      isMusicPlaying = !isMusicPlaying;
+      const btn = document.getElementById('musicToggleBtn');
+      const icon = document.getElementById('musicIcon');
+      const text = document.getElementById('musicBtnText');
+
+      if (isMusicPlaying) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 bg-emerald-600 text-white hover:bg-emerald-500 transition shadow-lg shadow-emerald-600/30";
+        icon.className = "fa-solid fa-music text-white animate-bounce";
+        text.textContent = "Music: On";
+        startUpbeatLoop();
+      } else {
+        btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30";
+        icon.className = "fa-solid fa-music text-indigo-200";
+        text.textContent = "Music: Off";
+        stopUpbeatLoop();
+      }
+    }
+
+    function startUpbeatLoop() {
+      if (musicInterval) clearInterval(musicInterval);
+      const chordNotes = [
+        [261.63, 329.63, 392.00],
+        [220.00, 261.63, 329.63],
+        [349.23, 440.00, 523.25],
+        [392.00, 493.88, 587.33]
+      ];
+      let step = 0;
+      musicInterval = setInterval(() => {
+        if (!isMusicPlaying || !audioCtx) return;
+        const notes = chordNotes[Math.floor(step / 4) % chordNotes.length];
+        const freq = notes[step % notes.length];
+        
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+
+        step++;
+      }, 300);
+    }
+
+    function stopUpbeatLoop() {
+      if (musicInterval) clearInterval(musicInterval);
+    }
+
     function getTodayDayKey() {
       const jsDay = new Date().getDay();
       return ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][jsDay] || 'MON';
@@ -264,7 +335,6 @@
         try { appState = { ...appState, ...JSON.parse(saved) }; } catch(e){} 
       }
 
-      // Check for automatic weekly reset (Monday rollover)
       const currentMonday = getMondayString();
       if (!appState.currentWeekMonday) {
         appState.currentWeekMonday = currentMonday;
@@ -515,7 +585,7 @@
     }
     function closePinModal() { document.getElementById('pinModal').classList.add('hidden'); }
     function verifyPin() {
-      if (document.getElementById('pinInput').value.trim() === appState.adminPin) { isAdmin = true; closePinModal(); renderAll(); }
+      if (document.getElementById('pinInput'].value.trim() === appState.adminPin) { isAdmin = true; closePinModal(); renderAll(); }
       else { document.getElementById('pinError').textContent = 'Incorrect PIN'; }
     }
     function openChangePinModal() { document.getElementById('changePinModal').classList.remove('hidden'); }
