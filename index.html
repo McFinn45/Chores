@@ -31,7 +31,7 @@
             <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-white">CHORE SCHEDULE</h1>
             <span id="syncBadge" onclick="openCloudModal()" class="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition">
               <span class="w-2 h-2 rounded-full bg-amber-400 sync-dot"></span>
-              <span id="syncText">Setup Cloud Sync</span>
+              <span id="syncText">Cloud Sync Setup</span>
             </span>
           </div>
           <p class="text-xs text-slate-400" id="currentDateDisplay">Weekly Interactive Household Tracker</p>
@@ -50,17 +50,33 @@
       </div>
     </div>
 
-    <!-- ADMIN TOOLBAR -->
-    <div id="adminToolbar" class="hidden bg-indigo-950/90 border-t border-b border-indigo-500/30 px-4 py-2.5">
-      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-        <div class="text-xs font-semibold text-indigo-200"><span class="px-2 py-0.5 rounded bg-indigo-500 text-white font-bold uppercase text-[10px]">Admin Unlocked</span></div>
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="openAddTaskModal()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5"><i class="fa-solid fa-plus"></i> Add Chore</button>
-          <button onclick="openColorsModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs font-semibold"><i class="fa-solid fa-palette text-pink-400"></i> Colors</button>
-          <button onclick="openChangePinModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-bold"><i class="fa-solid fa-key"></i> PIN</button>
-          <button onclick="openCloudModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-sky-400 border border-slate-600 text-xs font-semibold"><i class="fa-solid fa-cloud"></i> Cloud Sync</button>
-          <button onclick="confirmResetWeek()" class="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+    <!-- DEVICE USER SELECTOR BAR -->
+    <div class="bg-slate-950 border-t border-slate-800 px-4 py-2">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 shrink-0 flex items-center gap-1.5">
+          <i class="fa-solid fa-mobile-screen text-sky-400"></i> This Device User:
         </div>
+        <div id="deviceUserPills" class="flex items-center gap-1.5 shrink-0"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN TOOLBAR WITH STATUS FEED -->
+    <div id="adminToolbar" class="hidden bg-indigo-950/90 border-t border-b border-indigo-500/30 px-4 py-3">
+      <div class="max-w-7xl mx-auto space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="text-xs font-semibold text-indigo-200 flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-indigo-500 text-white font-bold uppercase text-[10px]">Admin Unlocked</span>
+            <span>Live Household Status Dashboard</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="requestBrowserNotifications()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-sky-300 border border-slate-600 text-xs font-bold"><i class="fa-solid fa-bell mr-1"></i> Enable Alerts</button>
+            <button onclick="openColorsModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 border border-slate-600 text-xs font-semibold">Colors</button>
+            <button onclick="openChangePinModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-amber-300 border border-amber-500/40 text-xs font-bold">PIN</button>
+            <button onclick="openCloudModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 text-sky-400 border border-slate-600 text-xs font-semibold">Cloud Sync</button>
+            <button onclick="confirmResetWeek()" class="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold">Reset Week</button>
+          </div>
+        </div>
+        <div id="adminStatusFeed" class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-indigo-900"></div>
       </div>
     </div>
   </header>
@@ -92,10 +108,10 @@
     </section>
   </main>
 
-  <!-- MODALS (PIN, Task, Colors, Cloud) -->
+  <!-- MODALS -->
   <div id="pinModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
-      <h3 class="text-lg font-bold text-white mb-4">Admin Unlock</h3>
+      <h3 class="text-lg font-bold text-white mb-4">Admin Unlock (Cary & Kelly)</h3>
       <input type="password" id="pinInput" placeholder="Enter PIN" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-center text-xl font-extrabold text-white mb-2" onkeydown="if(event.key==='Enter') verifyPin()"/>
       <p id="pinError" class="text-xs text-rose-400 text-center h-4 mb-3"></p>
       <div class="flex gap-2"><button onclick="closePinModal()" class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">Cancel</button><button onclick="verifyPin()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold">Unlock</button></div>
@@ -115,22 +131,13 @@
   <div id="cloudModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
       <h3 class="text-lg font-bold text-white mb-2">JSONbin Cloud Sync</h3>
-      <p class="text-xs text-slate-400 mb-4">Paste your JSONbin Bin ID and Master Key to sync instantly across devices.</p>
+      <p class="text-xs text-slate-400 mb-4">Paste your JSONbin Bin ID and Master Key.</p>
       <div class="space-y-3 mb-4">
-        <input type="text" id="binIdInput" placeholder="Bin ID (e.g. 648...)" class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs font-mono text-white"/>
-        <input type="password" id="masterKeyInput" placeholder="Master Key ($2a$10$...)" class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs font-mono text-white"/>
+        <input type="text" id="binIdInput" placeholder="Bin ID" class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs font-mono text-white"/>
+        <input type="password" id="masterKeyInput" placeholder="Master Key" class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs font-mono text-white"/>
       </div>
       <p id="cloudStatusMsg" class="text-xs font-semibold text-emerald-400 mb-3"></p>
-      <div class="flex gap-2"><button onclick="closeCloudModal()" class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">Close</button><button onclick="connectJsonBin()" class="flex-1 py-2.5 rounded-xl bg-sky-600 text-white text-xs font-bold">Connect Sync</button></div>
-    </div>
-  </div>
-
-  <div id="taskModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-      <h3 id="taskModalTitle" class="text-lg font-bold text-white mb-3">Add Chore</h3>
-      <input type="text" id="taskNameInput" placeholder="Chore Name" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white mb-3"/>
-      <div id="taskModalDaysGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4"></div>
-      <div class="flex justify-between"><button id="deleteTaskBtn" onclick="deleteCurrentTask()" class="hidden px-4 py-2 bg-rose-600/20 text-rose-400 text-xs font-bold rounded-xl">Delete</button><div class="flex gap-2 ml-auto"><button onclick="closeTaskModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">Cancel</button><button onclick="saveTaskFromModal()" class="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl">Save</button></div></div>
+      <div class="flex gap-2"><button onclick="closeCloudModal()" class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">Close</button><button onclick="connectJsonBin()" class="flex-1 py-2.5 rounded-xl bg-sky-600 text-white text-xs font-bold">Connect</button></div>
     </div>
   </div>
 
@@ -181,11 +188,24 @@
       { id: "c23", task: "Water plants", days: { MON: "Cary", TUE: "Cary", WED: "Cary", THU: "Cary", FRI: "Cary", SAT: "Cary", SUN: "Cary" } }
     ];
 
-    let appState = { adminPin: "1234", colors: { ...DEFAULT_COLORS }, everyoneMembers: ["Madi", "Colt", "Kam", "Zach", "Tanner"], chores: JSON.parse(JSON.stringify(INITIAL_CHORES)), completed: {} };
-    let isAdmin = false, selectedPerson = "ALL", selectedDay = 'MON', viewMode = 'day', editingTaskId = null;
+    let appState = { adminPin: "1234", colors: { ...DEFAULT_COLORS }, everyoneMembers: ["Madi", "Colt", "Kam", "Zach", "Tanner"], chores: JSON.parse(JSON.stringify(INITIAL_CHORES)), completed: {}, currentWeekMonday: "" };
+    let isAdmin = false, selectedPerson = "ALL", selectedDay = getTodayDayKey(), viewMode = 'day';
     let binId = localStorage.getItem('jsonbin_id') || "";
     let masterKey = localStorage.getItem('jsonbin_key') || "";
+    let activeDeviceUser = localStorage.getItem('finney_device_user') || "Cary";
     let syncInterval = null;
+
+    function getTodayDayKey() {
+      const jsDay = new Date().getDay();
+      return ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][jsDay] || 'MON';
+    }
+
+    function getMondayString(d = new Date()) {
+      const date = new Date(d);
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(date.setDate(diff)).toISOString().split('T')[0];
+    }
 
     function getSubAssignees(who) {
       if (!who) return [];
@@ -193,17 +213,67 @@
       if (who.includes('/')) return who.split('/').map(s => s.trim()).filter(Boolean);
       return [who];
     }
-    function isSubAssigneeDone(id, day, p) { return !!appState.completed[`${id}_${day}_${p}`]; }
-    function toggleSubAssigneeDone(id, day, p) {
-      const key = `${id}_${day}_${p}`;
-      if (appState.completed[key]) delete appState.completed[key]; else appState.completed[key] = true;
+
+    function getSlotInfo(id, day, personName) {
+      const entry = appState.completed[`${id}_${day}_${personName}`];
+      if (!entry) return { done: false, by: null };
+      if (typeof entry === 'boolean') return { done: entry, by: personName };
+      return { done: entry.done, by: entry.by };
+    }
+
+    function toggleSubAssigneeDone(id, day, personName) {
+      const key = `${id}_${day}_${personName}`;
+      const slot = getSlotInfo(id, day, personName);
+      
+      if (slot.done) {
+        delete appState.completed[key];
+      } else {
+        appState.completed[key] = { done: true, by: activeDeviceUser };
+        checkPersonDailyCompletion(day, personName);
+      }
       saveState();
     }
+
+    function checkPersonDailyCompletion(day, personName) {
+      let total = 0, done = 0;
+      appState.chores.forEach(c => {
+        const who = c.days[day];
+        if (who && getSubAssignees(who).includes(personName)) {
+          total++;
+          if (getSlotInfo(c.id, day, personName).done) done++;
+        }
+      });
+      if (total > 0 && done === total && window.Notification && Notification.permission === "granted") {
+        new Notification(`${personName} Completed Daily Chores!`, { body: `${personName} has finished all assigned chores for today.` });
+      }
+    }
+
+    function requestBrowserNotifications() {
+      if (window.Notification) {
+        Notification.requestPermission().then(p => {
+          alert(p === "granted" ? "Notifications enabled!" : "Permission denied.");
+        });
+      }
+    }
+
     function matchesFilter(who, p) { return who && (p === "ALL" || who === p || getSubAssignees(who).includes(p)); }
 
     function initApp() {
       const saved = localStorage.getItem('finney_chores_jsonbin');
-      if (saved) { try { appState = { ...appState, ...JSON.parse(saved) }; } catch(e){} }
+      if (saved) { 
+        try { appState = { ...appState, ...JSON.parse(saved) }; } catch(e){} 
+      }
+
+      // Check for automatic weekly reset (Monday rollover)
+      const currentMonday = getMondayString();
+      if (!appState.currentWeekMonday) {
+        appState.currentWeekMonday = currentMonday;
+      } else if (appState.currentWeekMonday !== currentMonday) {
+        appState.completed = {};
+        appState.currentWeekMonday = currentMonday;
+        saveState();
+      }
+
       document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
       if (binId && masterKey) { startPolling(); }
       renderAll();
@@ -226,9 +296,7 @@
     async function pullCloud() {
       if (!binId || !masterKey) return;
       try {
-        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-          headers: { 'X-Master-Key': masterKey }
-        });
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, { headers: { 'X-Master-Key': masterKey } });
         if (res.ok) {
           const json = await res.json();
           if (json && json.record) {
@@ -249,7 +317,9 @@
     }
 
     function renderAll() {
+      renderDeviceUserPills();
       renderAdminUI();
+      renderAdminStatusFeed();
       renderPersonFilters();
       renderDayTabs();
       if (viewMode === 'day') {
@@ -263,6 +333,30 @@
         document.getElementById('gridViewContainer').classList.remove('hidden');
         renderGridView();
       }
+    }
+
+    function renderDeviceUserPills() {
+      const container = document.getElementById('deviceUserPills');
+      const allPeople = Object.keys(appState.colors).filter(p => !["Everyone", "Whoever is asked", "Cary/Kelly"].includes(p));
+      let html = '';
+      allPeople.forEach(person => {
+        const isSel = activeDeviceUser === person;
+        const col = appState.colors[person] || '#64748b';
+        html += `
+          <button onclick="setDeviceUser('${person}')" 
+            style="${isSel ? `background-color: ${col}; color: #fff; border-color: ${col};` : `background-color: rgba(30,41,59,0.7); color: #94a3b8; border-color: #334155;`}"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold border transition shrink-0">
+            ${person} ${isSel ? '✓' : ''}
+          </button>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function setDeviceUser(person) {
+      activeDeviceUser = person;
+      localStorage.setItem('finney_device_user', person);
+      renderAll();
     }
 
     function setViewMode(m) {
@@ -279,15 +373,46 @@
       document.getElementById('adminBtnText').textContent = isAdmin ? "Lock Admin" : "Admin";
     }
 
+    function renderAdminStatusFeed() {
+      const feed = document.getElementById('adminStatusFeed');
+      if (!isAdmin) return;
+      const today = getTodayDayKey();
+      const activePeople = Object.keys(appState.colors).filter(p => !["Everyone", "Whoever is asked", "Cary/Kelly", "Finnigan"].includes(p));
+      let html = '';
+
+      activePeople.forEach(person => {
+        let total = 0, done = 0;
+        appState.chores.forEach(c => {
+          const who = c.days[today];
+          if (who && getSubAssignees(who).includes(person)) {
+            total++;
+            if (getSlotInfo(c.id, today, person).done) done++;
+          }
+        });
+        if (total > 0) {
+          const isComplete = done === total;
+          html += `
+            <div class="bg-slate-900 border ${isComplete ? 'border-emerald-500/50 bg-emerald-950/20' : 'border-amber-500/40 bg-amber-950/20'} rounded-xl p-2 flex items-center justify-between">
+              <span class="text-xs font-bold text-white">${person}</span>
+              <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md ${isComplete ? 'bg-emerald-500 text-slate-950' : 'bg-amber-500/30 text-amber-300'}">
+                ${isComplete ? 'Complete ✓' : `${done}/${total} Remaining`}
+              </span>
+            </div>
+          `;
+        }
+      });
+      feed.innerHTML = html || '<span class="text-xs text-slate-400">No active chores scheduled for today.</span>';
+    }
+
     function renderPersonFilters() {
       let total = 0, done = 0, stats = {};
       Object.keys(appState.colors).forEach(p => stats[p] = {t:0, d:0});
       appState.chores.forEach(c => DAYS.forEach(d => {
         const who = c.days[d.key];
         if (who) getSubAssignees(who).forEach(p => {
-          total++; if (isSubAssigneeDone(c.id, d.key, p)) done++;
+          total++; if (getSlotInfo(c.id, d.key, p).done) done++;
           if (!stats[p]) stats[p] = {t:0, d:0};
-          stats[p].t++; if (isSubAssigneeDone(c.id, d.key, p)) stats[p].d++;
+          stats[p].t++; if (getSlotInfo(c.id, d.key, p).done) stats[p].d++;
         });
       }));
       const pct = total > 0 ? Math.round((done/total)*100) : 0;
@@ -310,7 +435,7 @@
         let t = 0, dn = 0;
         appState.chores.forEach(c => {
           const who = c.days[d.key];
-          if (matchesFilter(who, selectedPerson)) getSubAssignees(who).filter(p => selectedPerson==='ALL'||p===selectedPerson).forEach(p => { t++; if(isSubAssigneeDone(c.id, d.key, p)) dn++; });
+          if (matchesFilter(who, selectedPerson)) getSubAssignees(who).filter(p => selectedPerson==='ALL'||p===selectedPerson).forEach(p => { t++; if(getSlotInfo(c.id, d.key, p).done) dn++; });
         });
         const isAct = selectedDay === d.key;
         html += `<button onclick="selectDay('${d.key}')" class="flex-1 min-w-[85px] py-2.5 px-3 rounded-xl text-center border ${isAct?'bg-blue-600 border-blue-400 text-white':'bg-slate-800 text-slate-400'}"><div class="text-xs font-extrabold">${d.label}</div><div class="text-[11px] font-semibold">${dn}/${t}</div></button>`;
@@ -329,23 +454,35 @@
         const who = c.days[selectedDay], subs = getSubAssignees(who);
         const col = appState.colors[who] || '#64748b';
         let subHtml = '';
+
         if (subs.length > 1) {
           subHtml = `<div class="mt-3 pt-2.5 border-t border-slate-800 flex flex-wrap gap-2">`;
           subs.forEach(p => {
-            const done = isSubAssigneeDone(c.id, selectedDay, p);
-            subHtml += `<button onclick="toggleSubAssigneeDone('${c.id}','${selectedDay}','${p}')" class="px-3 py-1.5 rounded-xl text-xs font-bold border ${done?'bg-emerald-500/20 border-emerald-500 text-emerald-300':'bg-slate-950 border-slate-700 text-white'}"><i class="fa-solid fa-check mr-1"></i>${p}</button>`;
+            const slot = getSlotInfo(c.id, selectedDay, p);
+            const isMismatch = slot.done && slot.by && slot.by !== p && isAdmin;
+            subHtml += `
+              <div class="flex flex-col">
+                <button onclick="toggleSubAssigneeDone('${c.id}','${selectedDay}','${p}')" class="px-3 py-1.5 rounded-xl text-xs font-bold border ${slot.done?'bg-emerald-500/20 border-emerald-500 text-emerald-300':'bg-slate-950 border-slate-700 text-white'}"><i class="fa-solid fa-check mr-1"></i>${p}</button>
+                ${isMismatch ? `<span class="text-[9px] text-amber-400 font-bold mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i> Checked by ${slot.by}</span>` : ''}
+              </div>
+            `;
           });
           subHtml += `</div>`;
         }
-        const singleDone = subs.length === 1 && isSubAssigneeDone(c.id, selectedDay, subs[0]);
+
+        const singlePerson = subs.length === 1 ? subs[0] : null;
+        const singleSlot = singlePerson ? getSlotInfo(c.id, selectedDay, singlePerson) : { done: false, by: null };
+        const isSingleMismatch = singleSlot.done && singleSlot.by && singleSlot.by !== singlePerson && isAdmin;
+
         html += `
           <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-md" style="border-left: 5px solid ${col};">
             <div class="flex items-center justify-between gap-3">
-              <div onclick="${subs.length===1?`toggleSubAssigneeDone('${c.id}','${selectedDay}','${subs[0]}')`:''}" class="flex items-center gap-3.5 flex-1 ${subs.length===1?'cursor-pointer':''}">
-                ${subs.length===1?`<button class="w-7 h-7 rounded-xl flex items-center justify-center border-2 ${singleDone?'bg-emerald-500 border-emerald-500 text-slate-950':'bg-slate-950 border-slate-600 text-transparent'}"><i class="fa-solid fa-check text-sm font-bold"></i></button>`:''}
+              <div onclick="${singlePerson ? `toggleSubAssigneeDone('${c.id}','${selectedDay}','${singlePerson}')` : ''}" class="flex items-center gap-3.5 flex-1 ${singlePerson ? 'cursor-pointer' : ''}">
+                ${singlePerson ? `<button class="w-7 h-7 rounded-xl flex items-center justify-center border-2 ${singleSlot.done ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'bg-slate-950 border-slate-600 text-transparent'}"><i class="fa-solid fa-check text-sm font-bold"></i></button>` : ''}
                 <div>
-                  <div class="text-sm sm:text-base font-bold ${singleDone?'line-through text-slate-500':'text-white'}">${c.task}</div>
-                  <div class="text-[11px] text-slate-400">${subs.length>1?'Multiple people assigned':`Assigned to ${who}`}</div>
+                  <div class="text-sm sm:text-base font-bold ${singleSlot.done ? 'line-through text-slate-500' : 'text-white'}">${c.task}</div>
+                  <div class="text-[11px] text-slate-400">${subs.length > 1 ? 'Multiple people assigned' : `Assigned to ${who}`}</div>
+                  ${isSingleMismatch ? `<div class="text-[10px] text-amber-400 font-bold mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i> Checked by ${singleSlot.by} (Assigned to ${singlePerson})</div>` : ''}
                 </div>
               </div>
               <span class="px-3 py-1.5 rounded-xl text-xs font-bold text-white border" style="background:${col}33;border-color:${col}">${who||'Unassigned'}</span>
@@ -365,7 +502,7 @@
       appState.chores.forEach(c => {
         b += `<tr class="hover:bg-slate-800/40"><td class="py-3 px-4 font-bold text-slate-200 border-r border-slate-800 text-xs">${c.task}</td>`;
         DAYS.forEach(d => {
-          const who = c.days[d.key], subs = getSubAssignees(who);
+          const who = c.days[d.key];
           b += `<td class="p-2 border-r border-slate-800 text-center text-xs">${who||'&mdash;'}</td>`;
         });
         b += `</tr>`;
@@ -400,7 +537,6 @@
       masterKey = document.getElementById('masterKeyInput').value.trim();
       localStorage.setItem('jsonbin_id', binId);
       localStorage.setItem('jsonbin_key', masterKey);
-      document.getElementById('cloudStatusMsg').textContent = "Testing connection...";
       await pullCloud();
       closeCloudModal();
       startPolling();
@@ -414,12 +550,6 @@
       document.getElementById('colorsModal').classList.remove('hidden');
     }
     function closeColorsModal() { document.getElementById('colorsModal').classList.add('hidden'); }
-    function openAddTaskModal() { document.getElementById('taskModal').classList.remove('hidden'); }
-    function closeTaskModal() { document.getElementById('taskModal').classList.add('hidden'); }
-    function saveTaskFromModal() {
-      const name = document.getElementById('taskNameInput').value.trim();
-      if(name) { appState.chores.push({ id:'c_'+Date.now(), task:name, days:{MON:'Colt'} }); saveState(); closeTaskModal(); }
-    }
 
     window.addEventListener('DOMContentLoaded', initApp);
   </script>
